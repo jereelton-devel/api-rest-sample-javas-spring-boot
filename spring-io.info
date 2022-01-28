@@ -1,0 +1,1 @@
+https://start.spring.io/#!type=maven-project&language=java&platformVersion=2.6.3&packaging=jar&jvmVersion=17&groupId=com.api-rest-sample.app&artifactId=api-rest-sample-app&name=API%20Rest%20Sample&description=API%20Rest%20Sample&packageName=com.api-rest-sample.app&dependencies=devtools,lombok,web,webflux,data-rest,mysql,data-jpa,restdocs
