@@ -14,7 +14,7 @@ public class AccessControlService {
             return false;
         }
 
-        return authorization.equals("Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=");
+        return authorization.equals("");
     }
 
 }
