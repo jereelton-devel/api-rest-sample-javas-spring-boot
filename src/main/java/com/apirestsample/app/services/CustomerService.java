@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +27,15 @@ public class CustomerService {
         return customerRepository.findByUsername(username);
     }
 
-    public ResponseEntity<?> save(CustomerEntity customer) {
+    public static Integer getEntityFields() {
+        return CustomerEntity.class.getDeclaredFields().length;
+    }
+
+    public ResponseEntity<?> save(HttpServletRequest headers, CustomerEntity customer) {
+
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
 
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
@@ -46,7 +55,12 @@ public class CustomerService {
         }
     }
 
-    public ResponseEntity<?> findAll() {
+    public ResponseEntity<?> findAll(HttpServletRequest headers) {
+
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
         try {
             List<CustomerEntity> listAll = customerRepository.findAll();
             JSONObject customersDTO = CustomerDTO.mapperAllCustomerDTO(listAll);
@@ -60,7 +74,12 @@ public class CustomerService {
         }
     }
 
-    public ResponseEntity<?> findById(String customer_id) {
+    public ResponseEntity<?> findById(HttpServletRequest headers, String customer_id) {
+
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
@@ -76,10 +95,19 @@ public class CustomerService {
         }
     }
 
-    public ResponseEntity<?> updateCustomer(String customer_id, CustomerEntity customer_data) {
+    public ResponseEntity<?> updateCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_up) {
 
-        if (customer_data == null) {
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        if (customer_up == null || customer_up.size() == 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
+        }
+
+        /*(getEntityFields()-1) - indicate that the data field [id] from Entity can be ignored*/
+        if (!(customer_up.size() >= getEntityFields()) && !(customer_up.size() >= (getEntityFields()-1))) {
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Update is not correct, because it should be total data update");
         }
 
         try {
@@ -90,8 +118,8 @@ public class CustomerService {
             } else {
                 return customerRepository.findById(customer_id)
                     .map( record -> {
-                        record.setName(customer_data.getName());
-                        record.setActive(customer_data.getActive());
+                        record.setName(customer_up.getAsString("name"));
+                        record.setActive(customer_up.getAsString("active"));
                         CustomerEntity updated = customerRepository.save(record);
                         return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(updated));
                     }).orElse(ResponseEntity.notFound().build());
@@ -101,7 +129,12 @@ public class CustomerService {
         }
     }
 
-    public ResponseEntity<?> deleteCustomer(String customer_id) {
+    public ResponseEntity<?> deleteCustomer(HttpServletRequest headers, String customer_id) {
+
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
@@ -109,22 +142,30 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                        .map(record -> {
-                            customerRepository.deleteById(customer_id);
-                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record));
-                        }).orElse(ResponseEntity.notFound().build());
+                    .map(record -> {
+                        customerRepository.deleteById(customer_id);
+                        return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record));
+                    }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
         }
     }
 
-    public ResponseEntity<?> patchCustomer(String customer_id, CustomerEntity customer_patch) {
+    public ResponseEntity<?> patchCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_patch) {
 
-        if (customer_patch == null) {
+        if (!AccessControlService.authorization(headers)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        if (customer_patch == null || customer_patch.size() == 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
         }
 
+        if (!(customer_patch.size() < getEntityFields())) {
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Patch is not correct, because it should be partial update");
+        }
+
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
@@ -132,15 +173,20 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                        .map( record -> {
-                            if (customer_patch.getName() != null) record.setName(customer_patch.getName());
-                            if (customer_patch.getActive() != null) record.setActive(customer_patch.getActive());
-                            CustomerEntity patcher = customerRepository.save(record);
-                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
-                        }).orElse(ResponseEntity.notFound().build());
+                    .map( record -> {
+                        if (customer_patch.getAsString("name") != null) record.setName(customer_patch.getAsString("name"));
+                        if (customer_patch.getAsString("active") != null) record.setActive(customer_patch.getAsString("active"));
+                        CustomerEntity patcher = customerRepository.save(record);
+                        return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
+                    }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
         }
     }
+
+    public ResponseEntity<?> requestReject() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("Wrong request");
+    }
+
 }
