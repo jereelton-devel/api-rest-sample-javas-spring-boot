@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -173,9 +174,21 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                    .map( record -> {
-                        if (customer_patch.getAsString("name") != null) record.setName(customer_patch.getAsString("name"));
-                        if (customer_patch.getAsString("active") != null) record.setActive(customer_patch.getAsString("active"));
+                    .map(record -> {
+                        boolean patched = false;
+                        if (customer_patch.getAsString("name") != null) {
+                            record.setName(customer_patch.getAsString("name"));
+                            patched = true;
+                        }
+                        if (customer_patch.getAsString("active") != null) {
+                            record.setActive(customer_patch.getAsString("active"));
+                            patched = true;
+                        }
+                        /*force error*/
+                        if (!patched) {
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .body("Patch Fail: Missing correct fields to patcher");
+                        }
                         CustomerEntity patcher = customerRepository.save(record);
                         return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
                     }).orElse(ResponseEntity.notFound().build());

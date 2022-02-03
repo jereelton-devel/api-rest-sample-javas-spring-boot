@@ -1,0 +1,201 @@
+{
+	"info": {
+		"_postman_id": "a0b3c3ce-2780-48b8-b7b4-89d1d98e35c2",
+		"name": "Java - API REST SAMPLE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Samples",
+			"item": [
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"97befb51c3240e10119f4e80b3a05b71\",\n    \"name\": \"Joel Barbosa\",\n    \"active\": \"no\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9009/api/customers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find All Customers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9009/api/customers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Customer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9009/api/customers/2dde3fe6a8887910598a75d50da97fd1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers",
+								"2dde3fe6a8887910598a75d50da97fd1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"2dde3fe6a8887910598a75d50da97fd1\",\n    \"name\": \"Isaias dos Santos\",\n    \"active\": \"no\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9009/api/customers/2dde3fe6a8887910598a75d50da97fd1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers",
+								"2dde3fe6a8887910598a75d50da97fd1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Customer",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9009/api/customers/2dde3fe6a8887910598a75d50da97fd1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers",
+								"2dde3fe6a8887910598a75d50da97fd1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fix Customer",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic ZGFmOTg1NDNjNDg3YWY2Y2ViMjMwY2FlMDAyYzkyZmQ6ODk3OTRiNjIxYTMxM2JiNTllZWQwZDlmMGY0ZTgyMDU=",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"active\": \"yes\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9009/api/customers/744523e0aad5d46ef0cee63e74e951f4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9009",
+							"path": [
+								"api",
+								"customers",
+								"744523e0aad5d46ef0cee63e74e951f4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -1,6 +1,5 @@
 package com.apirestsample.app;
 
-import com.apirestsample.app.utils.Helpers;
 import net.minidev.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,23 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Properties;
-
 import static com.apirestsample.app.utils.Helpers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ApiRestSampleApplicationTests extends AbstractTest {
-
-    private final Properties props = Helpers.extractProps();
-	private final String authRequest = props.getProperty("application.basic-authorization");
-	private final String invalidAuthRequest = props.getProperty("application.test.basic-authorization-invalid");
-
-	String uriWrongTest = "/";
-	String uri2WrongTest = "/api";
-	String uriBaseTest = "/api/customers";
-	String userIdFoundTest = "97befb51c3240e10119f4e80b3a05b71";
-	String userIdNotFoundTest = "97befb51c3240e10119f4e80b3a05000";
-	String wrongBasicAuthTest = "Basic X1X2X3X4X5X6ZX7X8X9X0";
 
 	@Override
 	@Before
@@ -48,21 +34,23 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 
 		mockMvc.perform(
 				MockMvcRequestBuilders
-					.post(uriBaseTest)
-					.content(customerPost)
-					.contentType(MediaType.APPLICATION_JSON)
-					.accept(MediaType.APPLICATION_JSON)
-					.header("Authorization", authRequest)
-		)
-		.andExpect(status().isCreated())
-		.andReturn();
+						.post(uriBaseTest)
+						.content(customerPost)
+						.contentType(MediaType.APPLICATION_JSON)
+						.accept(MediaType.APPLICATION_JSON)
+						.header("Authorization", authRequest)
+				)
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		rollbackTest(md5Id);
 
 	}
 
 	@Test
 	public void whenCorrectRequestToCreateCustomerAlreadyExists_RetrieveCustomerFound_302() throws Exception {
 
-		String dataRequest = props.getProperty("application.test.post-exists-customer");
+		String dataRequest = props.getProperty("application.test.post-customer-exists");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
 		jsonObj.appendField("id", md5Id);
@@ -199,18 +187,7 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 
 	@Test
 	public void whenCorrectRequestToReadAllCustomersButServerError_RetrieveServerError_500() throws Exception {
-
-		MvcResult mvcResult = mockMvc
-				.perform(MockMvcRequestBuilders.get(uriBaseTest)
-						.accept(MediaType.ALL)
-						.header("Authorization", authRequest)
-				).andReturn();
-
-		int status = mvcResult.getResponse().getStatus();
-
-		String content = mvcResult.getResponse().getContentAsString();
-		Assertions.assertEquals(status, status);
-		Assertions.assertTrue(content.length() > 0);
+		System.out.println("@Test [READ ALL] 500 is ignored");
 	}
 
 	/**
@@ -220,8 +197,10 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenCorrectRequestToReadCustomer_RetrieveCustomerDetails_200() throws Exception {
 
+		String md5Id = md5(userIdFoundTest);
+
 		MvcResult mvcResult = mockMvc
-				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+userIdFoundTest)
+				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+md5Id)
 						.accept(MediaType.ALL)
 						.header("Authorization", authRequest)
 				).andReturn();
@@ -237,8 +216,10 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenRequestReadCustomerWithInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
 
+		String md5Id = md5(userIdFoundTest);
+
 		MvcResult mvcResult = mockMvc
-				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+userIdFoundTest)
+				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+md5Id)
 						.accept(MediaType.ALL)
 						.header("Authorization", invalidAuthRequest)
 				).andReturn();
@@ -253,10 +234,12 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenCorrectRequestToReadCustomerButNotExists_RetrieveNotFound_404() throws Exception {
 
+		String md5Id = md5(userIdNotFoundTest);
+
 		MvcResult mvcResult = mockMvc
-				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+userIdNotFoundTest)
+				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+md5Id)
 						.accept(MediaType.ALL)
-						.header("Authorization", invalidAuthRequest)
+						.header("Authorization", authRequest)
 				).andReturn();
 
 		int status = mvcResult.getResponse().getStatus();
@@ -269,19 +252,7 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 
 	@Test
 	public void whenCorrectRequestToReadCustomerButServerError_RetrieveServerError_500() throws Exception {
-
-		MvcResult mvcResult = mockMvc
-				.perform(MockMvcRequestBuilders.get(uriBaseTest+"/"+userIdNotFoundTest)
-						.accept(MediaType.ALL)
-						.header("Authorization", authRequest)
-				).andReturn();
-
-		int status = mvcResult.getResponse().getStatus();
-
-		String content = mvcResult.getResponse().getContentAsString();
-		Assertions.assertEquals(status, status);
-		Assertions.assertTrue(content.length() > 0);
-
+		System.out.println("@Test [READ] 500 is ignored");
 	}
 
 	/**
@@ -351,7 +322,7 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenRequestUpdateCustomerButNotExists_RetrieveNotFound_404() throws Exception {
 
-		String dataRequest = props.getProperty("application.test.put-customer");
+		String dataRequest = props.getProperty("application.test.put-customer-not-found");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
 		jsonObj.appendField("id", md5Id);
@@ -359,7 +330,7 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 
 		mockMvc.perform(
 						MockMvcRequestBuilders
-								.put(uriBaseTest+"/123456770000000000000")
+								.put(uriBaseTest+"/"+md5Id)
 								.content(customerPost)
 								.contentType(MediaType.APPLICATION_JSON)
 								.accept(MediaType.APPLICATION_JSON)
@@ -395,7 +366,8 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 		String dataRequest = props.getProperty("application.test.put-customer");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
-		jsonObj.appendField("id_2", md5Id);
+		jsonObj.appendField("name_2", jsonObj.getAsString("name"));
+		jsonObj.remove("name");
 		String customerPost = jsonToString(jsonObj);
 
 		mockMvc.perform(
@@ -419,6 +391,11 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 
 		String dataRequest = props.getProperty("application.test.delete-customer");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
+		JSONObject jsonObj = queryStringToJson(dataRequest);
+		jsonObj.appendField("id", md5Id);
+		String createCustomer = jsonToString(jsonObj);
+
+		createCustomerBeforeTest(createCustomer);
 
 		mockMvc.perform(
 						MockMvcRequestBuilders
@@ -447,10 +424,13 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenCorrectRequestToDeleteCustomerButNotExists_RetrieveNotFound_404() throws Exception {
 
+		String dataRequest = props.getProperty("application.test.delete-customer-not-found");
+		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
+
 		mockMvc.perform(
 						MockMvcRequestBuilders
-								.delete(uriBaseTest+"/XYZ909A9A090000000000000000000")
-								.header("Authorization", invalidAuthRequest)
+								.delete(uriBaseTest+"/"+md5Id)
+								.header("Authorization", authRequest)
 				)
 				.andExpect(status().isNotFound())
 				.andReturn();
@@ -529,18 +509,18 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenRequestPatchCustomerButNotExists_RetrieveNotFound_404() throws Exception {
 
-		String dataRequest = props.getProperty("application.test.patch-customer");
+		String dataRequest = props.getProperty("application.test.patch-customer-not-found");
+		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
-		jsonObj.remove("name");
 		String customerPost = jsonToString(jsonObj);
 
 		mockMvc.perform(
 						MockMvcRequestBuilders
-								.patch(uriBaseTest+"/XYZ90D90S90S90S90000000000000")
+								.patch(uriBaseTest+"/"+md5Id)
 								.content(customerPost)
 								.contentType(MediaType.APPLICATION_JSON)
 								.accept(MediaType.APPLICATION_JSON)
-								.header("Authorization", invalidAuthRequest)
+								.header("Authorization", authRequest)
 				)
 				.andExpect(status().isNotFound())
 				.andReturn();
@@ -549,7 +529,7 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	@Test
 	public void whenRequestPatchCustomerWithInvalidBodySize_RetrieveNotAcceptable_406() throws Exception {
 
-		String dataRequest = props.getProperty("application.test.patch-customer");
+		String dataRequest = props.getProperty("application.test.patch-customer-invalid");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
 		jsonObj.appendField("id", md5Id);
@@ -574,7 +554,9 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 		String dataRequest = props.getProperty("application.test.patch-customer");
 		String md5Id = md5(getDataFromQueryString(dataRequest, "name"));
 		JSONObject jsonObj = queryStringToJson(dataRequest);
-		jsonObj.appendField("id_2", md5Id);
+		jsonObj.appendField("name_2", "Test Patcher");
+		jsonObj.remove("name");
+		jsonObj.remove("active");
 		String customerPost = jsonToString(jsonObj);
 
 		mockMvc.perform(
@@ -594,13 +576,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsGetAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsGetAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.get(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.get(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -608,13 +604,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsPostAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsPostAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.post(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.post(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -622,13 +632,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsPutAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsPutAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.put(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.put(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -636,13 +660,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsDeleteAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsDeleteAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.delete(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.delete(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -650,13 +688,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsPatchAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsPatchAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.patch(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.patch(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -664,13 +716,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsHeadAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsHeadAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.head(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.head(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 	/**
@@ -678,13 +744,27 @@ public class ApiRestSampleApplicationTests extends AbstractTest {
 	 */
 
 	@Test
-	public void whenIsOptionsAndInvalidRequestUriAndInvalidAuthorization_RetrieveUnauthorized_401() throws Exception {
-
-	}
-
-	@Test
 	public void whenIsOptionsAndInvalidRequestUriAnd_RetrieveNotAllowed_405() throws Exception {
 
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.options(uriWrongTest)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
+
+		mockMvc.perform(
+						MockMvcRequestBuilders
+								.options(uriWrongTest2)
+								.contentType(MediaType.APPLICATION_JSON)
+								.accept(MediaType.APPLICATION_JSON)
+								.header("Authorization", authRequest)
+				)
+				.andExpect(status().isMethodNotAllowed())
+				.andReturn();
 	}
 
 }
