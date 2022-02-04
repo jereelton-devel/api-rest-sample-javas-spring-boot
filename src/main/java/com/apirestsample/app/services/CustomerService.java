@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +43,7 @@ public class CustomerService {
 
         if (findUserByName(customer.getName()) != null) {
             return ResponseEntity.status(HttpStatus.FOUND)
-                .body("Customer ["+customer.getName()+"] already exists");
+                    .body("Customer [" + customer.getName() + "] already exists");
         }
 
         try {
@@ -52,7 +51,7 @@ public class CustomerService {
             return ResponseEntity.status(HttpStatus.CREATED).body(CustomerDTO.mapperCustomerDTO(customerSave));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Occurs an error not expected in the server");
+                    .body("Occurs an error not expected in the server");
         }
     }
 
@@ -88,8 +87,8 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                    .map(record -> ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record)))
-                    .orElse(ResponseEntity.notFound().build());
+                        .map(record -> ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record)))
+                        .orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
@@ -107,7 +106,7 @@ public class CustomerService {
         }
 
         /*(getEntityFields()-1) - indicate that the data field [id] from Entity can be ignored*/
-        if (!(customer_up.size() >= getEntityFields()) && !(customer_up.size() >= (getEntityFields()-1))) {
+        if (!(customer_up.size() >= getEntityFields()) && !(customer_up.size() >= (getEntityFields() - 1))) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Update is not correct, because it should be total data update");
         }
 
@@ -118,12 +117,12 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                    .map( record -> {
-                        record.setName(customer_up.getAsString("name"));
-                        record.setActive(customer_up.getAsString("active"));
-                        CustomerEntity updated = customerRepository.save(record);
-                        return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(updated));
-                    }).orElse(ResponseEntity.notFound().build());
+                        .map(record -> {
+                            record.setName(customer_up.getAsString("name"));
+                            record.setActive(customer_up.getAsString("active"));
+                            CustomerEntity updated = customerRepository.save(record);
+                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(updated));
+                        }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
@@ -143,10 +142,10 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                    .map(record -> {
-                        customerRepository.deleteById(customer_id);
-                        return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record));
-                    }).orElse(ResponseEntity.notFound().build());
+                        .map(record -> {
+                            customerRepository.deleteById(customer_id);
+                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record));
+                        }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
@@ -174,24 +173,24 @@ public class CustomerService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
-                    .map(record -> {
-                        boolean patched = false;
-                        if (customer_patch.getAsString("name") != null) {
-                            record.setName(customer_patch.getAsString("name"));
-                            patched = true;
-                        }
-                        if (customer_patch.getAsString("active") != null) {
-                            record.setActive(customer_patch.getAsString("active"));
-                            patched = true;
-                        }
-                        /*force error*/
-                        if (!patched) {
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body("Patch Fail: Missing correct fields to patcher");
-                        }
-                        CustomerEntity patcher = customerRepository.save(record);
-                        return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
-                    }).orElse(ResponseEntity.notFound().build());
+                        .map(record -> {
+                            boolean patched = false;
+                            if (customer_patch.getAsString("name") != null) {
+                                record.setName(customer_patch.getAsString("name"));
+                                patched = true;
+                            }
+                            if (customer_patch.getAsString("active") != null) {
+                                record.setActive(customer_patch.getAsString("active"));
+                                patched = true;
+                            }
+                            /*force error*/
+                            if (!patched) {
+                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body("Patch Fail: Missing correct fields to patcher");
+                            }
+                            CustomerEntity patcher = customerRepository.save(record);
+                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
+                        }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
