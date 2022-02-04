@@ -17,10 +17,28 @@ import java.util.Optional;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final JSONObject jsonResponse;
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
+        this.jsonResponse = new JSONObject();
+    }
+
+    public ResponseEntity<?> retrieveInternalServerError() {
+        setResponseError("Occurs an error not expected in the server");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse);
+    }
+
+    public void setResponseError(String message) {
+        jsonResponse.appendField("status", "error");
+        jsonResponse.appendField("message", message);
+    }
+
+    public void setResponseSuccess(String message, Object data) {
+        jsonResponse.appendField("status", "success");
+        jsonResponse.appendField("message", message);
+        jsonResponse.appendField("data", data);
     }
 
     public CustomerEntity findUserByName(String username) {
@@ -34,143 +52,169 @@ public class CustomerService {
     public ResponseEntity<?> save(HttpServletRequest headers, CustomerEntity customer) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         if (customer == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
+            setResponseError("Missing body request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
         }
 
         if (findUserByName(customer.getName()) != null) {
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .body("Customer [" + customer.getName() + "] already exists");
+            setResponseError("Customer [" + customer.getName() + "] already exists");
+            return ResponseEntity.status(HttpStatus.FOUND).body(jsonResponse);
         }
 
         try {
             CustomerEntity customerSave = customerRepository.save(customer);
-            return ResponseEntity.status(HttpStatus.CREATED).body(CustomerDTO.mapperCustomerDTO(customerSave));
+            setResponseSuccess("Customer created successfully", CustomerDTO.mapperCustomerDTO(customerSave));
+            return ResponseEntity.status(HttpStatus.CREATED).body(jsonResponse);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> findAll(HttpServletRequest headers) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         try {
             List<CustomerEntity> listAll = customerRepository.findAll();
             JSONObject customersDTO = CustomerDTO.mapperAllCustomerDTO(listAll);
             if (customersDTO.size() > 0) {
-                return ResponseEntity.status(HttpStatus.OK).body(customersDTO);
+                setResponseSuccess("Customers found successfully", customersDTO);
+                return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customers not found");
+                setResponseError("Customers not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> findById(HttpServletRequest headers, String customer_id) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
+                setResponseError("Customer not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
             } else {
                 return customerRepository.findById(customer_id)
-                        .map(record -> ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record)))
+                        .map(record -> {
+                            setResponseSuccess("Customer found successfully", CustomerDTO.mapperCustomerDTO(record));
+                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+                        })
                         .orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> updateCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_up) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         if (customer_up == null || customer_up.size() == 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
+            setResponseError("Missing body request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
         }
 
         /*(getEntityFields()-1) - indicate that the data field [id] from Entity can be ignored*/
         if (!(customer_up.size() >= getEntityFields()) && !(customer_up.size() >= (getEntityFields() - 1))) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Update is not correct, because it should be total data update");
+            setResponseError("Update is not correct, because it should be total data update");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(jsonResponse);
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
+                setResponseError("Customer not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
+
                             record.setName(customer_up.getAsString("name"));
                             record.setActive(customer_up.getAsString("active"));
                             CustomerEntity updated = customerRepository.save(record);
-                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(updated));
+                            setResponseSuccess("Customer updated successfully", CustomerDTO.mapperCustomerDTO(updated));
+                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+
                         }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> deleteCustomer(HttpServletRequest headers, String customer_id) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
+                setResponseError("Customer not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
+
                             customerRepository.deleteById(customer_id);
-                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(record));
+                            setResponseSuccess("Customer deleted successfully", CustomerDTO.mapperCustomerDTO(record));
+                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+
                         }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> patchCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_patch) {
 
         if (!AccessControlService.authorization(headers)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            setResponseError("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
         }
 
         if (customer_patch == null || customer_patch.size() == 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing body request");
+            setResponseError("Missing body request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
         }
 
         if (!(customer_patch.size() < getEntityFields())) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Patch is not correct, because it should be partial update");
+            setResponseError("Patch is not correct, because it should be partial update");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(jsonResponse);
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found");
+                setResponseError("Customer not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
@@ -185,20 +229,24 @@ public class CustomerService {
                             }
                             /*force error*/
                             if (!patched) {
-                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body("Patch Fail: Missing correct fields to patcher");
+                                setResponseError("Patch Fail: Missing correct fields to patcher");
+                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse);
                             }
+
                             CustomerEntity patcher = customerRepository.save(record);
-                            return ResponseEntity.ok().body(CustomerDTO.mapperCustomerDTO(patcher));
+                            setResponseSuccess("Customer patched successfully", CustomerDTO.mapperCustomerDTO(patcher));
+                            return ResponseEntity.ok().body(jsonResponse);
+
                         }).orElse(ResponseEntity.notFound().build());
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Occurs an error not expected in the server");
+            return retrieveInternalServerError();
         }
     }
 
     public ResponseEntity<?> requestReject() {
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("Wrong request");
+        setResponseError("Wrong request");
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(jsonResponse);
     }
 
 }
