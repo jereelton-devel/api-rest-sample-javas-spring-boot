@@ -3,6 +3,7 @@ package com.apirestsample.app.services;
 import com.apirestsample.app.entities.CustomerDTO;
 import com.apirestsample.app.entities.CustomerEntity;
 import com.apirestsample.app.repositories.CustomerRepository;
+import com.apirestsample.app.utils.ResponseHandler;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,31 +15,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CustomerService {
+public class CustomerService extends ResponseHandler {
 
     private final CustomerRepository customerRepository;
-    private final JSONObject jsonResponse;
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
-        this.jsonResponse = new JSONObject();
-    }
-
-    public ResponseEntity<?> retrieveInternalServerError() {
-        setResponseError("Occurs an error not expected in the server");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse);
-    }
-
-    public void setResponseError(String message) {
-        jsonResponse.appendField("status", "error");
-        jsonResponse.appendField("message", message);
-    }
-
-    public void setResponseSuccess(String message, Object data) {
-        jsonResponse.appendField("status", "success");
-        jsonResponse.appendField("message", message);
-        jsonResponse.appendField("data", data);
     }
 
     public CustomerEntity findUserByName(String username) {
@@ -52,24 +35,24 @@ public class CustomerService {
     public ResponseEntity<?> save(HttpServletRequest headers, CustomerEntity customer) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         if (customer == null) {
-            setResponseError("Missing body request");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.BAD_REQUEST, "Missing body request");
         }
 
         if (findUserByName(customer.getName()) != null) {
-            setResponseError("Customer [" + customer.getName() + "] already exists");
-            return ResponseEntity.status(HttpStatus.FOUND).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.FOUND, "Customer [" + customer.getName() + "] already exists");
         }
 
         try {
             CustomerEntity customerSave = customerRepository.save(customer);
-            setResponseSuccess("Customer created successfully", CustomerDTO.mapperCustomerDTO(customerSave));
-            return ResponseEntity.status(HttpStatus.CREATED).body(jsonResponse);
+            return retrieveSuccessResponse(
+                    HttpStatus.CREATED,
+                    "Customer created successfully",
+                    CustomerDTO.mapperCustomerDTO(customerSave)
+            );
         } catch (Exception ex) {
             return retrieveInternalServerError();
         }
@@ -78,19 +61,16 @@ public class CustomerService {
     public ResponseEntity<?> findAll(HttpServletRequest headers) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         try {
             List<CustomerEntity> listAll = customerRepository.findAll();
             JSONObject customersDTO = CustomerDTO.mapperAllCustomerDTO(listAll);
             if (customersDTO.size() > 0) {
-                setResponseSuccess("Customers found successfully", customersDTO);
-                return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+                return retrieveSuccessResponse(HttpStatus.OK, "Customers found successfully", customersDTO);
             } else {
-                setResponseError("Customers not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
+                return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customers not found");
             }
         } catch (Exception e) {
             return retrieveInternalServerError();
@@ -100,21 +80,23 @@ public class CustomerService {
     public ResponseEntity<?> findById(HttpServletRequest headers, String customer_id) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                setResponseError("Customer not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
+                return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
-                            setResponseSuccess("Customer found successfully", CustomerDTO.mapperCustomerDTO(record));
-                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(record);
+                            return retrieveSuccessResponse(
+                                    HttpStatus.OK,
+                                    "Customer found successfully",
+                                    customerDTO
+                            );
                         })
                         .orElse(ResponseEntity.notFound().build());
             }
@@ -126,27 +108,26 @@ public class CustomerService {
     public ResponseEntity<?> updateCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_up) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         if (customer_up == null || customer_up.size() == 0) {
-            setResponseError("Missing body request");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.BAD_REQUEST, "Missing body request");
         }
 
         /*(getEntityFields()-1) - indicate that the data field [id] from Entity can be ignored*/
         if (!(customer_up.size() >= getEntityFields()) && !(customer_up.size() >= (getEntityFields() - 1))) {
-            setResponseError("Update is not correct, because it should be total data update");
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(jsonResponse);
+            return retrieveAnyResponse(
+                    HttpStatus.NOT_ACCEPTABLE,
+                    "Update is not correct, because it should be total data update"
+            );
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                setResponseError("Customer not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
+                return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
@@ -154,8 +135,12 @@ public class CustomerService {
                             record.setName(customer_up.getAsString("name"));
                             record.setActive(customer_up.getAsString("active"));
                             CustomerEntity updated = customerRepository.save(record);
-                            setResponseSuccess("Customer updated successfully", CustomerDTO.mapperCustomerDTO(updated));
-                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(updated);
+                            return retrieveSuccessResponse(
+                                    HttpStatus.OK,
+                                    "Customer updated successfully",
+                                    customerDTO
+                            );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
@@ -167,23 +152,25 @@ public class CustomerService {
     public ResponseEntity<?> deleteCustomer(HttpServletRequest headers, String customer_id) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                setResponseError("Customer not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
+                return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
 
                             customerRepository.deleteById(customer_id);
-                            setResponseSuccess("Customer deleted successfully", CustomerDTO.mapperCustomerDTO(record));
-                            return ResponseEntity.status(HttpStatus.OK).body(jsonResponse);
+                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(record);
+                            return retrieveSuccessResponse(
+                                    HttpStatus.OK,
+                                    "Customer deleted successfully",
+                                    customerDTO
+                            );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
@@ -195,26 +182,25 @@ public class CustomerService {
     public ResponseEntity<?> patchCustomer(HttpServletRequest headers, String customer_id, JSONObject customer_patch) {
 
         if (!AccessControlService.authorization(headers)) {
-            setResponseError("Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
         if (customer_patch == null || customer_patch.size() == 0) {
-            setResponseError("Missing body request");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
+            return retrieveAnyResponse(HttpStatus.BAD_REQUEST, "Missing body request");
         }
 
         if (!(customer_patch.size() < getEntityFields())) {
-            setResponseError("Patch is not correct, because it should be partial update");
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(jsonResponse);
+            return retrieveAnyResponse(
+                    HttpStatus.NOT_ACCEPTABLE,
+                    "Patch is not correct, because it should be partial update"
+            );
         }
 
         try {
             Optional<CustomerEntity> customer = customerRepository.findById(customer_id);
 
             if (customer.stream().findAny().isEmpty()) {
-                setResponseError("Customer not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse);
+                return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customer not found");
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
@@ -229,13 +215,19 @@ public class CustomerService {
                             }
                             /*force error*/
                             if (!patched) {
-                                setResponseError("Patch Fail: Missing correct fields to patcher");
-                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse);
+                                return retrieveAnyResponse(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Patch Fail: Missing correct fields to patcher"
+                                );
                             }
 
                             CustomerEntity patcher = customerRepository.save(record);
-                            setResponseSuccess("Customer patched successfully", CustomerDTO.mapperCustomerDTO(patcher));
-                            return ResponseEntity.ok().body(jsonResponse);
+                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(patcher);
+                            return retrieveSuccessResponse(
+                                    HttpStatus.OK,
+                                    "Customer patched successfully",
+                                    customerDTO
+                            );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
@@ -245,8 +237,7 @@ public class CustomerService {
     }
 
     public ResponseEntity<?> requestReject() {
-        setResponseError("Wrong request");
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(jsonResponse);
+        return retrieveAnyResponse(HttpStatus.METHOD_NOT_ALLOWED, "Wrong request");
     }
 
 }

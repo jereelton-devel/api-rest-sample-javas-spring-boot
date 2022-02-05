@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -51,7 +53,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @PostMapping(path = "/api/customers")
+    @PostMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(HttpServletRequest headers, @Valid @RequestBody(required = false) CustomerEntity customer) {
         return customerService.save(headers, customer);
     }
@@ -74,7 +76,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @GetMapping(path = "/api/customers")
+    @GetMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> readAll(HttpServletRequest headers) {
         return customerService.findAll(headers);
     }
@@ -97,7 +99,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @GetMapping(path = "/api/customers/{customer_id}")
+    @GetMapping(path = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> read(HttpServletRequest headers, @PathVariable("customer_id") String customer_id) {
         return customerService.findById(headers, customer_id);
     }
@@ -126,7 +128,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @PutMapping (value = "/api/customers/{customer_id}")
+    @PutMapping (value = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(
             HttpServletRequest headers,
             @PathVariable("customer_id") String customer_id,
@@ -153,7 +155,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @DeleteMapping (path = "/api/customers/{customer_id}")
+    @DeleteMapping (path = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> delete(HttpServletRequest headers, @PathVariable("customer_id") String customer_id) {
         return customerService.deleteCustomer(headers, customer_id);
     }
@@ -182,7 +184,7 @@ public class CustomerController {
                     @Content(mediaType = "text")
             })
     })
-    @PatchMapping (path = "/api/customers/{customer_id}")
+    @PatchMapping (path = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> patch(
             HttpServletRequest headers,
             @PathVariable("customer_id") String customer_id,

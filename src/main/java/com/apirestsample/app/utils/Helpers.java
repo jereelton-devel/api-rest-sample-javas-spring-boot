@@ -16,11 +16,11 @@ public class Helpers {
 
         String str = (queryString.split(field+"=")[1]);
 
-       if (str.contains("&")) {
-           str = str.split("&")[0];
-       }
+        if (str.contains("&")) {
+            str = str.split("&")[0];
+        }
 
-       return str;
+        return str;
     }
 
     public static JSONObject queryStringToJson(String input) {
@@ -39,6 +39,30 @@ public class Helpers {
 
     public static String jsonToString(JSONObject json) {
         return json.toJSONString();
+    }
+
+    public static JSONObject stringToJson(String str) {
+
+        JSONObject jsonData = new JSONObject();
+        String strClean = str.replaceAll("([\"{}]+)", "");
+
+        try {
+            String[] splitter = strClean.split(",");
+
+            for (String split : splitter) {
+                String[] splitter2 = split.split(":");
+                jsonData.appendField(splitter2[0], splitter2[1]);
+            }
+        } catch (Exception e) {
+            try {
+                String[] splitter = strClean.split(":");
+                jsonData.appendField(splitter[0], splitter[1]);
+            } catch (Exception er) {
+                jsonData.appendField("message", null);
+            }
+        }
+
+        return jsonData;
     }
 
     public static Properties extractProps() {
