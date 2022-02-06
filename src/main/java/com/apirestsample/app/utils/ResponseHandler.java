@@ -15,6 +15,7 @@ public abstract class ResponseHandler {
     }
 
     protected JSONObject setResponseError(String message) {
+        jsonResponse.clear();
         jsonResponse.appendField("status", "error");
         jsonResponse.appendField("message", message);
 
@@ -28,6 +29,7 @@ public abstract class ResponseHandler {
     }
 
     protected JSONObject setAnyResponse(String message) {
+        jsonResponse.clear();
         jsonResponse.appendField("message", message);
         return jsonResponse;
     }
@@ -37,6 +39,7 @@ public abstract class ResponseHandler {
     }
 
     protected JSONObject setResponseSuccess(String message, Object data) {
+        jsonResponse.clear();
         jsonResponse.appendField("status", "success");
         jsonResponse.appendField("message", message);
         jsonResponse.appendField("data", data);

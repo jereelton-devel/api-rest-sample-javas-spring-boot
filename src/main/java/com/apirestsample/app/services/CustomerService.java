@@ -32,7 +32,7 @@ public class CustomerService extends ResponseHandler {
         return CustomerEntity.class.getDeclaredFields().length;
     }
 
-    public ResponseEntity<?> save(HttpServletRequest headers, CustomerEntity customer) {
+    public ResponseEntity<?> createCustomer(HttpServletRequest headers, CustomerEntity customer) {
 
         if (!AccessControlService.authorization(headers)) {
             return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
@@ -58,7 +58,7 @@ public class CustomerService extends ResponseHandler {
         }
     }
 
-    public ResponseEntity<?> findAll(HttpServletRequest headers) {
+    public ResponseEntity<?> readAllCustomers(HttpServletRequest headers) {
 
         if (!AccessControlService.authorization(headers)) {
             return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
@@ -77,7 +77,7 @@ public class CustomerService extends ResponseHandler {
         }
     }
 
-    public ResponseEntity<?> findById(HttpServletRequest headers, String customer_id) {
+    public ResponseEntity<?> readOneCustomer(HttpServletRequest headers, String customer_id) {
 
         if (!AccessControlService.authorization(headers)) {
             return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");

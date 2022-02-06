@@ -36,6 +36,8 @@ public class CustomerDTO {
             ));
         }
 
+        results.appendField("total", counter);
+
         return results;
     }
 

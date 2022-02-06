@@ -15,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -54,8 +53,8 @@ public class CustomerController {
             })
     })
     @PostMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> create(HttpServletRequest headers, @Valid @RequestBody(required = false) CustomerEntity customer) {
-        return customerService.save(headers, customer);
+    public ResponseEntity<?> createCustomer(HttpServletRequest headers, @Valid @RequestBody(required = false) CustomerEntity customer) {
+        return customerService.createCustomer(headers, customer);
     }
 
     /**
@@ -77,8 +76,8 @@ public class CustomerController {
             })
     })
     @GetMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> readAll(HttpServletRequest headers) {
-        return customerService.findAll(headers);
+    public ResponseEntity<?> readAllCustomers(HttpServletRequest headers) {
+        return customerService.readAllCustomers(headers);
     }
 
     /**
@@ -100,8 +99,8 @@ public class CustomerController {
             })
     })
     @GetMapping(path = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> read(HttpServletRequest headers, @PathVariable("customer_id") String customer_id) {
-        return customerService.findById(headers, customer_id);
+    public ResponseEntity<?> readOneCustomer(HttpServletRequest headers, @PathVariable("customer_id") String customer_id) {
+        return customerService.readOneCustomer(headers, customer_id);
     }
 
     /**
