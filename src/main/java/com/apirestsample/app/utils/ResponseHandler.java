@@ -17,6 +17,7 @@ public abstract class ResponseHandler {
     protected JSONObject setResponseError(String message) {
         jsonResponse.clear();
         jsonResponse.appendField("status", "error");
+        jsonResponse.appendField("code", 500);
         jsonResponse.appendField("message", message);
 
         return jsonResponse;
@@ -28,19 +29,21 @@ public abstract class ResponseHandler {
         );
     }
 
-    protected JSONObject setAnyResponse(String message) {
+    protected JSONObject setAnyResponse(Integer status, String message) {
         jsonResponse.clear();
+        jsonResponse.appendField("code", status);
         jsonResponse.appendField("message", message);
         return jsonResponse;
     }
 
     protected ResponseEntity<?> retrieveAnyResponse(HttpStatus status, String message) {
-        return ResponseEntity.status(status).body(setAnyResponse(message));
+        return ResponseEntity.status(status).body(setAnyResponse(status.value(), message));
     }
 
-    protected JSONObject setResponseSuccess(String message, Object data) {
+    protected JSONObject setResponseSuccess(Integer status, String message, Object data) {
         jsonResponse.clear();
         jsonResponse.appendField("status", "success");
+        jsonResponse.appendField("code", status);
         jsonResponse.appendField("message", message);
         jsonResponse.appendField("data", data);
 
@@ -48,7 +51,7 @@ public abstract class ResponseHandler {
     }
 
     protected ResponseEntity<?> retrieveSuccessResponse(HttpStatus status, String message, Object data) {
-        return ResponseEntity.status(status).body(setResponseSuccess(message, data));
+        return ResponseEntity.status(status).body(setResponseSuccess(status.value(), message, data));
     }
 
 }

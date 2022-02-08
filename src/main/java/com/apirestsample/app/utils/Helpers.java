@@ -79,7 +79,7 @@ public class Helpers {
         return properties;
     }
 
-    public static String md5(String data){
+    public static String md5(String data) {
         return DigestUtils.md5DigestAsHex(data.getBytes());
     }
 
