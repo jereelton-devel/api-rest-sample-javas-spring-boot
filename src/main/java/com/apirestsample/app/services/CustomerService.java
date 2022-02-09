@@ -11,20 +11,78 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+
+import static com.apirestsample.app.utils.Helpers.md5;
 
 @Service
 public class CustomerService extends ResponseHandler {
 
     private final CustomerRepository customerRepository;
-
     @Autowired
     public CustomerService(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
     }
 
-    public CustomerEntity findUserByName(String username) {
+    public static List<JSONObject> getDevicesFake() {
+
+        Random num = new Random();
+
+        List<JSONObject> devices = new ArrayList<>();
+
+        JSONObject deviceSms = new JSONObject();
+        deviceSms.appendField("id", num.nextInt(10000));
+        String[] typeSms = new String[]{"sms"};
+        deviceSms.appendField("capabilities", typeSms);
+        deviceSms.appendField("confirmed_at", null);
+        deviceSms.appendField("number", "55129988990099");
+        deviceSms.appendField("token", md5(String.valueOf(num.nextInt(10000))));
+        deviceSms.appendField("otp_activated", false);
+
+        devices.add(deviceSms);
+
+        JSONObject deviceMail = new JSONObject();
+        deviceMail.appendField("id", num.nextInt(10000));
+        String[] typeMail = new String[]{"mail"};
+        deviceMail.appendField("capabilities", typeMail);
+        deviceMail.appendField("confirmed_at", null);
+        deviceMail.appendField("email", "email@email.com");
+
+        devices.add(deviceMail);
+
+        return devices;
+    }
+
+    public JSONObject getProcessFake() {
+
+        Random num = new Random();
+        String token = md5(String.valueOf(num.nextInt(100000)));
+
+        JSONObject processFake = new JSONObject();
+        processFake.appendField("token", token);
+        processFake.appendField("created_at", "2087-07-25T02:48:40.815Z");
+        processFake.appendField("updated_at", "2087-07-25T02:48:40.815Z");
+        processFake.appendField("data", null);
+        processFake.appendField("passcode_attempts_left", 3);
+        processFake.appendField("auth_attempts_left", 3);
+        processFake.appendField("authorized", false);
+
+        JSONObject jsonUserFake = new JSONObject();
+        jsonUserFake.appendField("id", num.nextInt(10000));
+        jsonUserFake.appendField("name", "Username Fake");
+        jsonUserFake.appendField("username", md5(String.valueOf(num.nextInt(100000))));
+        jsonUserFake.appendField("devices", getDevicesFake());
+
+        processFake.appendField("user", jsonUserFake);
+
+        return processFake;
+
+    }
+
+    public CustomerEntity findUserByUsername(String username) {
         return customerRepository.findByUsername(username);
     }
 
@@ -32,7 +90,7 @@ public class CustomerService extends ResponseHandler {
         return CustomerEntity.class.getDeclaredFields().length;
     }
 
-    public ResponseEntity<?> createCustomer(HttpServletRequest headers, CustomerEntity customer) {
+    public ResponseEntity<?> createCustomer(HttpServletRequest headers, JSONObject customer) {
 
         if (!AccessControlService.authorization(headers)) {
             return retrieveAnyResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");
@@ -42,19 +100,35 @@ public class CustomerService extends ResponseHandler {
             return retrieveAnyResponse(HttpStatus.BAD_REQUEST, "Missing body request");
         }
 
-        if (findUserByName(customer.getName()) != null) {
-            return retrieveAnyResponse(HttpStatus.FOUND, "Customer [" + customer.getName() + "] already exists");
+        if (findUserByUsername(customer.getAsString("username")) != null) {
+            return retrieveAnyResponse(HttpStatus.FOUND, "Customer [" + customer.getAsString("username") + "] already exists");
         }
 
         try {
-            CustomerEntity customerSave = customerRepository.save(customer);
-            return retrieveSuccessResponse(
-                    HttpStatus.CREATED,
-                    "Customer created successfully",
-                    CustomerDTO.mapperCustomerDTO(customerSave)
+
+            Random num = new Random();
+
+            CustomerEntity customerSave = new CustomerEntity(
+                    ""+customer.getAsString("username"),
+                    ""+customer.getAsString("name"),
+                    ""+customer.getAsString("sms"),
+                    ""+num.nextInt(10000),
+                    ""+customer.getAsString("mail"),
+                    ""+num.nextInt(10000),
+                    ""+customer.getAsString("active")
             );
-        } catch (Exception ex) {
-            return retrieveInternalServerError();
+
+            customerRepository.save(customerSave);
+
+            CustomerDTO customerDTO = new CustomerDTO(this.customerRepository);
+
+            return retrieveSimpleSuccessResponse(
+                    HttpStatus.CREATED,
+                    customerDTO.mapperCustomerDTO(customerSave)
+            );
+
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 
@@ -66,14 +140,15 @@ public class CustomerService extends ResponseHandler {
 
         try {
             List<CustomerEntity> listAll = customerRepository.findAll();
-            JSONObject customersDTO = CustomerDTO.mapperAllCustomerDTO(listAll);
+            CustomerDTO customerDTO = new CustomerDTO(customerRepository);
+            JSONObject customersDTO = customerDTO.mapperAllCustomerDTO(listAll);
             if (customersDTO.size() > 0) {
                 return retrieveSuccessResponse(HttpStatus.OK, "Customers found successfully", customersDTO);
             } else {
                 return retrieveAnyResponse(HttpStatus.NOT_FOUND, "Customers not found");
             }
-        } catch (Exception e) {
-            return retrieveInternalServerError();
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 
@@ -91,17 +166,17 @@ public class CustomerService extends ResponseHandler {
             } else {
                 return customerRepository.findById(customer_id)
                         .map(record -> {
-                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(record);
+                            CustomerDTO customerDTO = new CustomerDTO(this.customerRepository);
                             return retrieveSuccessResponse(
                                     HttpStatus.OK,
                                     "Customer found successfully",
-                                    customerDTO
+                                    customerDTO.mapperCustomerDTO(record)
                             );
                         })
                         .orElse(ResponseEntity.notFound().build());
             }
-        } catch (Exception e) {
-            return retrieveInternalServerError();
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 
@@ -135,17 +210,17 @@ public class CustomerService extends ResponseHandler {
                             record.setName(customer_up.getAsString("name"));
                             record.setActive(customer_up.getAsString("active"));
                             CustomerEntity updated = customerRepository.save(record);
-                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(updated);
+                            CustomerDTO customerDTO = new CustomerDTO(this.customerRepository);
                             return retrieveSuccessResponse(
                                     HttpStatus.OK,
                                     "Customer updated successfully",
-                                    customerDTO
+                                    customerDTO.mapperCustomerDTO(updated)
                             );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
-        } catch (Exception e) {
-            return retrieveInternalServerError();
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 
@@ -165,17 +240,17 @@ public class CustomerService extends ResponseHandler {
                         .map(record -> {
 
                             customerRepository.deleteById(customer_id);
-                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(record);
+                            CustomerDTO customerDTO = new CustomerDTO(this.customerRepository);
                             return retrieveSuccessResponse(
                                     HttpStatus.OK,
                                     "Customer deleted successfully",
-                                    customerDTO
+                                    customerDTO.mapperCustomerDTO(record)
                             );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
-        } catch (Exception e) {
-            return retrieveInternalServerError();
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 
@@ -222,17 +297,17 @@ public class CustomerService extends ResponseHandler {
                             }
 
                             CustomerEntity patcher = customerRepository.save(record);
-                            CustomerDTO customerDTO = CustomerDTO.mapperCustomerDTO(patcher);
+                            CustomerDTO customerDTO = new CustomerDTO(this.customerRepository);
                             return retrieveSuccessResponse(
                                     HttpStatus.OK,
                                     "Customer patched successfully",
-                                    customerDTO
+                                    customerDTO.mapperCustomerDTO(patcher)
                             );
 
                         }).orElse(ResponseEntity.notFound().build());
             }
-        } catch (Exception e) {
-            return retrieveInternalServerError();
+        } catch (RuntimeException e) {
+            return retrieveInternalServerError(e);
         }
     }
 

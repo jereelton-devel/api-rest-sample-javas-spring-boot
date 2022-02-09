@@ -1,7 +1,6 @@
 package com.apirestsample.app.controllers;
 
 import com.apirestsample.app.entities.CustomerDTO;
-import com.apirestsample.app.entities.CustomerEntity;
 import com.apirestsample.app.services.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,8 +53,38 @@ public class CustomerController {
             })
     })
     @PostMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createCustomer(HttpServletRequest headers, @Valid @RequestBody(required = false) CustomerEntity customer) {
+    public ResponseEntity<?> createCustomer(HttpServletRequest headers, @Valid @RequestBody(required = false) JSONObject customer) {
+        System.out.println("CREATE USER: " + customer);
         return customerService.createCustomer(headers, customer);
+    }
+
+    /**
+     * Create Process
+     */
+    @PostMapping(path = "/api/process", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createProcess(HttpServletRequest headers, @Valid @RequestBody(required = false) JSONObject process) {
+        System.out.println("CREATE PROCESS: " + process);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
+    }
+
+    /**
+     * Send Passcode
+     */
+    @PostMapping(path = "/api/process/{token}/send_passcode", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> sendPasscode(HttpServletRequest headers, @PathVariable("token") String token, @Valid @RequestBody(required = false) JSONObject passcode) {
+        System.out.println("SEND PASSCODE: " + passcode);
+        System.out.println("TOKEN PASSCODE: " + token);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
+    }
+
+    /**
+     * Confirm Device
+     */
+    @PostMapping(path = "/api/customers/{customer_id}/confirm", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> confirmDevice(HttpServletRequest headers, @PathVariable("token") String token, @Valid @RequestBody(required = false) JSONObject passcode) {
+        System.out.println("SEND PASSCODE: " + passcode);
+        System.out.println("TOKEN PASSCODE: " + token);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
     }
 
     /**

@@ -14,18 +14,19 @@ public abstract class ResponseHandler {
         this.jsonResponse = new JSONObject();
     }
 
-    protected JSONObject setResponseError(String message) {
+    protected JSONObject setResponseError(RuntimeException ex) {
         jsonResponse.clear();
         jsonResponse.appendField("status", "error");
         jsonResponse.appendField("code", 500);
-        jsonResponse.appendField("message", message);
+        jsonResponse.appendField("message", "Occurs an error not expected in the server");
+        jsonResponse.appendField("details", ex.getMessage());
 
         return jsonResponse;
     }
 
-    protected ResponseEntity<?> retrieveInternalServerError() {
+    protected ResponseEntity<?> retrieveInternalServerError(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                setResponseError("Occurs an error not expected in the server")
+                setResponseError(ex)
         );
     }
 
@@ -52,6 +53,10 @@ public abstract class ResponseHandler {
 
     protected ResponseEntity<?> retrieveSuccessResponse(HttpStatus status, String message, Object data) {
         return ResponseEntity.status(status).body(setResponseSuccess(status.value(), message, data));
+    }
+
+    protected ResponseEntity<?> retrieveSimpleSuccessResponse(HttpStatus status, Object data) {
+        return ResponseEntity.status(status).body(data);
     }
 
 }
