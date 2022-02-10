@@ -80,11 +80,18 @@ public class CustomerController {
     /**
      * Confirm Device
      */
-    @PostMapping(path = "/api/customers/{customer_id}/confirm", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> confirmDevice(HttpServletRequest headers, @PathVariable("token") String token, @Valid @RequestBody(required = false) JSONObject passcode) {
-        System.out.println("SEND PASSCODE: " + passcode);
-        System.out.println("TOKEN PASSCODE: " + token);
-        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
+    @PostMapping(path = "/api/customers/{userid}/devices/{device_id}/confirm", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> confirmDevice(
+            HttpServletRequest headers,
+            @PathVariable("userid") String userid,
+            @PathVariable("device_id") String device_id,
+            @Valid @RequestBody(required = false) JSONObject data
+    ) {
+        System.out.println("CONFIRM DEVICE------------------------------------------------------------");
+        System.out.println("USERID: " + userid);
+        System.out.println("DEVICE: " + device_id);
+        System.out.println("DATA: " + data);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getConfirmedDeviceFake());
     }
 
     /**

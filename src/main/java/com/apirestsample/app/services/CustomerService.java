@@ -82,6 +82,20 @@ public class CustomerService extends ResponseHandler {
 
     }
 
+    public Object getConfirmedDeviceFake() {
+
+        JSONObject fakeConfirmed = new JSONObject();
+        fakeConfirmed.appendField("id", "123456");
+        fakeConfirmed.appendField("capabilities", "[sms-fake]");
+        fakeConfirmed.appendField("confirmed_at", "2022-01-25T04:41:59.160Z");
+        fakeConfirmed.appendField("number", "129988998890");
+        fakeConfirmed.appendField("token", "166f9e1987d56340e12a");
+        fakeConfirmed.appendField("otp_activated", false);
+
+        return fakeConfirmed;
+
+    }
+
     public CustomerEntity findUserByUsername(String username) {
         return customerRepository.findByUsername(username);
     }
@@ -314,5 +328,4 @@ public class CustomerService extends ResponseHandler {
     public ResponseEntity<?> requestReject() {
         return retrieveAnyResponse(HttpStatus.METHOD_NOT_ALLOWED, "Wrong request");
     }
-
 }
