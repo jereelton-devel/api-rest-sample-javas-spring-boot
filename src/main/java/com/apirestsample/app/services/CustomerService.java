@@ -28,7 +28,6 @@ public class CustomerService extends ResponseHandler {
     }
 
     public static List<JSONObject> getDevicesFake() {
-
         Random num = new Random();
 
         List<JSONObject> devices = new ArrayList<>();
@@ -57,7 +56,6 @@ public class CustomerService extends ResponseHandler {
     }
 
     public JSONObject getProcessFake() {
-
         Random num = new Random();
         String token = md5(String.valueOf(num.nextInt(100000)));
 
@@ -79,11 +77,9 @@ public class CustomerService extends ResponseHandler {
         processFake.appendField("user", jsonUserFake);
 
         return processFake;
-
     }
 
-    public Object getConfirmedDeviceFake() {
-
+    public JSONObject getConfirmedDeviceFake() {
         JSONObject fakeConfirmed = new JSONObject();
         fakeConfirmed.appendField("id", "123456");
         fakeConfirmed.appendField("capabilities", "[sms-fake]");
@@ -91,9 +87,25 @@ public class CustomerService extends ResponseHandler {
         fakeConfirmed.appendField("number", "129988998890");
         fakeConfirmed.appendField("token", "166f9e1987d56340e12a");
         fakeConfirmed.appendField("otp_activated", false);
-
         return fakeConfirmed;
 
+    }
+
+    public JSONObject deleteDeviceFaker() {
+        JSONObject deleteFakeDevice = new JSONObject();
+        deleteFakeDevice.appendField("id", "123456");
+        deleteFakeDevice.appendField("name", "Username Fake");
+        deleteFakeDevice.appendField("username", "166f9e1987d56340e12a166f9e1987d5");
+        deleteFakeDevice.appendField("devices", null);
+        return deleteFakeDevice;
+    }
+
+    public Object createDeviceFake() {
+        JSONObject createDeviceFake = new JSONObject();
+        createDeviceFake.appendField("name", "Username Fake");
+        createDeviceFake.appendField("username", "166f9e1987d56340e12a166f9e1987d5");
+        createDeviceFake.appendField("devices", getDevicesFake());
+        return createDeviceFake;
     }
 
     public CustomerEntity findUserByUsername(String username) {

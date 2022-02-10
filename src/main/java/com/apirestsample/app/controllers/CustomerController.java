@@ -32,28 +32,13 @@ public class CustomerController {
     }
 
     /**
-     * Create Customer
+     * Create User
      */
-    @Operation(summary = "Add new customer")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Customer created successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDTO.class))
-            }),
-            @ApiResponse(responseCode = "302", description = "Customer name already exists", content = {
-                    @Content(mediaType = "text")
-            }),
-            @ApiResponse(responseCode = "400", description = "Missing body request", content = {
-                    @Content(mediaType = "text")
-            }),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = {
-                    @Content(mediaType = "text")
-            }),
-            @ApiResponse(responseCode = "500", description = "Server error", content = {
-                    @Content(mediaType = "text")
-            })
-    })
     @PostMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createCustomer(HttpServletRequest headers, @Valid @RequestBody(required = false) JSONObject customer) {
+    public ResponseEntity<?> createCustomer(
+            HttpServletRequest headers,
+            @Valid @RequestBody(required = false) JSONObject customer
+    ) {
         System.out.println("CREATE USER: " + customer);
         return customerService.createCustomer(headers, customer);
     }
@@ -62,7 +47,10 @@ public class CustomerController {
      * Create Process
      */
     @PostMapping(path = "/api/process", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createProcess(HttpServletRequest headers, @Valid @RequestBody(required = false) JSONObject process) {
+    public ResponseEntity<?> createProcess(
+            HttpServletRequest headers,
+            @Valid @RequestBody(required = false) JSONObject process
+    ) {
         System.out.println("CREATE PROCESS: " + process);
         return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
     }
@@ -71,7 +59,11 @@ public class CustomerController {
      * Send Passcode
      */
     @PostMapping(path = "/api/process/{token}/send_passcode", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> sendPasscode(HttpServletRequest headers, @PathVariable("token") String token, @Valid @RequestBody(required = false) JSONObject passcode) {
+    public ResponseEntity<?> sendPasscode(
+            HttpServletRequest headers,
+            @PathVariable("token") String token,
+            @Valid @RequestBody(required = false) JSONObject passcode
+    ) {
         System.out.println("SEND PASSCODE: " + passcode);
         System.out.println("TOKEN PASSCODE: " + token);
         return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getProcessFake());
@@ -93,6 +85,42 @@ public class CustomerController {
         System.out.println("DATA: " + data);
         return ResponseEntity.status(HttpStatus.OK).body(this.customerService.getConfirmedDeviceFake());
     }
+
+    /**
+     * Update User - Delete Device
+     */
+    @DeleteMapping (path = "/api/customers/{customer_id}/devices/{device_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteDevice(
+            HttpServletRequest headers,
+            @PathVariable("customer_id") String customer_id,
+            @PathVariable("device_id") String device_id
+    ) {
+        System.out.println("DELETE DEVICE------------------------------------------------------------");
+        System.out.println("CUSTOMER-ID: " + customer_id);
+        System.out.println("DEVICE-ID: " + device_id);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.deleteDeviceFaker());
+    }
+
+    /**
+     * Update User - Create Device
+     */
+    @PostMapping(path = "/api/customers/{customer_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createDevice(
+            HttpServletRequest headers,
+            @PathVariable("customer_id") String customer_id,
+            @Valid @RequestBody(required = false) JSONObject customer
+    ) {
+        System.out.println("CREATE DEVICE------------------------------------------------------------");
+        System.out.println("CUSTOMER-ID: " + customer_id);
+        return ResponseEntity.status(HttpStatus.OK).body(this.customerService.createDeviceFake());
+    }
+
+
+
+
+    //END
+
+
 
     /**
      * Read All Customers
