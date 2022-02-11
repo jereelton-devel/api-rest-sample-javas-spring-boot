@@ -95,6 +95,9 @@ public class CustomerController {
             @PathVariable("customer_id") String customer_id,
             @PathVariable("device_id") String device_id
     ) {
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        System.out.println("UPDATE USER START");
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.out.println("DELETE DEVICE------------------------------------------------------------");
         System.out.println("CUSTOMER-ID: " + customer_id);
         System.out.println("DEVICE-ID: " + device_id);

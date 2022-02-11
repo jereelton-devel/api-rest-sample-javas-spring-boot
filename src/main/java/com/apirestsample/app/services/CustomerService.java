@@ -48,7 +48,7 @@ public class CustomerService extends ResponseHandler {
         String[] typeMail = new String[]{"mail"};
         deviceMail.appendField("capabilities", typeMail);
         deviceMail.appendField("confirmed_at", null);
-        deviceMail.appendField("email", "email@email.com");
+        deviceMail.appendField("email", "user89898989@mail.com.br");
 
         devices.add(deviceMail);
 
@@ -102,6 +102,7 @@ public class CustomerService extends ResponseHandler {
 
     public Object createDeviceFake() {
         JSONObject createDeviceFake = new JSONObject();
+        createDeviceFake.appendField("id", "123456");
         createDeviceFake.appendField("name", "Username Fake");
         createDeviceFake.appendField("username", "166f9e1987d56340e12a166f9e1987d5");
         createDeviceFake.appendField("devices", getDevicesFake());
@@ -134,13 +135,27 @@ public class CustomerService extends ResponseHandler {
 
             Random num = new Random();
 
+            String sms = null;
+            Integer smsId = null;
+            String mail = null;
+            Integer mailId = null;
+
+            if (customer.getAsString("sms") != null) {
+                sms = customer.getAsString("sms");
+                smsId = num.nextInt(10000);
+            }
+            if (customer.getAsString("mail") != null) {
+                mail = customer.getAsString("mail");
+                mailId = num.nextInt(10000);
+            }
+
             CustomerEntity customerSave = new CustomerEntity(
                     ""+customer.getAsString("username"),
                     ""+customer.getAsString("name"),
-                    ""+customer.getAsString("sms"),
-                    ""+num.nextInt(10000),
-                    ""+customer.getAsString("mail"),
-                    ""+num.nextInt(10000),
+                    ""+sms,
+                    ""+smsId,
+                    ""+mail,
+                    ""+mailId,
                     ""+customer.getAsString("active")
             );
 

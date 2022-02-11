@@ -11,7 +11,7 @@ import javax.persistence.Table;
 
 @Data
 @Entity
-@Table(name = "customers")
+@Table(name = "allowme_fake")
 @AllArgsConstructor
 @NoArgsConstructor
 public class CustomerEntity {
